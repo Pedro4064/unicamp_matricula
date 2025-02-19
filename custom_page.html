@@ -80,6 +80,7 @@
 
     <script src="build/pdf.js"></script>
     <script src="pdf-table-extractor.js"></script>
+    <script src="ics.deps.min.js"></script>
     <script id="script">
         const dropArea = document.getElementById("dropArea");
         const fileInput = document.getElementById("fileInput");
@@ -168,6 +169,7 @@
             }
 
             console.log(classes_entries);
+            generate_calendar_events(classes_entries);
         }
 
         var filter_schedule_time_slot = function (time_slot) {
@@ -179,14 +181,56 @@
                     continue;
                 }
 
-                let class_data = { 
+                let class_data = {
                     name: element.split("\n").pop(),   // Some times there are multiple \n, but most of the times the last part is the class name
-                    day_of_week_index: index-1              // basically which line this class is
+                    day_of_week_index: index - 1              // basically which line this class is
                 }
 
                 classes_data.push(class_data);
             }
             return classes_data;
+        }
+
+        var generate_calendar_events = function (classes_entries) {
+            // const END_OF_SEMESTER = new Date("12 June 2025");
+            const END_OF_SEMESTER = "12 June 2025";
+            // const END_OF_SEMESTER = new Date(7, 12, 2025);
+            const FIRST_MONDAY = "02/24/2025";
+            const FIRST_TUESDAY = "02/25/2025";
+            const FIRST_WEDNESDAY = "02/26/2025";
+            const FIRST_THURSDAY = "02/27/2025";
+            const FIRST_FRIDAY = "02/28/2025";
+            const FIRST_SATURDAY = "03/01/2025";
+
+            const DAYS_OF_WEEK = [
+                FIRST_MONDAY,
+                FIRST_TUESDAY,
+                FIRST_WEDNESDAY,
+                FIRST_THURSDAY,
+                FIRST_FRIDAY,
+                FIRST_SATURDAY,
+            ]
+
+            let cal = ics();
+            for (const [time, classes] of Object.entries(classes_entries)) {
+                let time_str = time.replace("H", "");
+                let [hour, minute] = time_str.split(":").map(Number);
+
+                for (const university_class of classes) {
+                    cal.addEvent(university_class.name, 
+                                'Aula - UNICAMP',
+                                'Campinas, SP',
+                                 DAYS_OF_WEEK[university_class.day_of_week_index] + " " + `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                                 DAYS_OF_WEEK[university_class.day_of_week_index] + " " + `${String(hour+1).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                                {
+                                    freq:"WEEKLY",
+                                    until: END_OF_SEMESTER
+                                });
+                }
+            }
+
+            console.log(cal);
+            cal.download("DAC_2025")
         }
 
     </script>
