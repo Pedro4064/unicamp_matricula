@@ -179,7 +179,8 @@
             let target_table_reached = false;
             let classes_entries = {};
 
-            for (const table of data.pageTables[0].tables) {
+            // for (const table of data.pageTables[0].tables) {
+            for (const table of data.pageTables.flatMap((page) => page.tables)) {
                 console.log(table);
 
                 if (table[0] == "Hora") {
@@ -190,6 +191,13 @@
                 if (!target_table_reached) {
                     continue;
                 }
+
+                const regex = new RegExp("RA Nome"); 
+                if (regex.test(table[0])){
+                    target_table_reached = false; // Reset since it may be a new table (for 2 page reports)
+                    continue;
+                }
+
                 let class_time = table[0].split("\n")[1];
                 let classes_in_time_slot = filter_schedule_time_slot(table);
                 console.log(classes_entries);
@@ -210,7 +218,7 @@
                 }
 
                 let class_data = {
-                    name: element.split("\n").pop(),   // Some times there are multiple \n, but most of the times the last part is the class name
+                    name: element.split("\n").pop().replace(" ","").match(/[A-Z]{1,2}\d{3}/)[0],   // Some times there are multiple \n, but most of the times the last part is the class name
                     day_of_week_index: index - 1              // basically which line this class is
                 }
 
