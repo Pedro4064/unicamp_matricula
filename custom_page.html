@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario UNICAMP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fc;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 50%;
+            max-width: 600px;
+        }
+
+        h2 {
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        p {
+            color: #777;
+            font-size: 14px;
+        }
+
+        .upload-box {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .upload-box:hover {
+            background-color: #f1f1f1;
+        }
+
+        .upload-box img {
+            width: 40px;
+            opacity: 0.6;
+            margin-bottom: 10px;
+        }
+
+        .upload-box input {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Calendario UNICAMP</h2>
+        <p>PARSING - RELATORIO DE MATRÍCULA</p>
+
+        <div for="fileInput" class="upload-box" id="dropArea">
+            <img src="https://cdn-icons-png.flaticon.com/512/833/833524.png" alt="Folder Icon">
+            <p>DRAG & DROP</p>
+            <input type="file" id="fileInput" accept=".pdf" />
+        </div>
+    </div>
+
+    <script src="build/pdf.js"></script>
+    <script src="pdf-table-extractor.js"></script>
+    <script id="script">
+        const dropArea = document.getElementById("dropArea");
+        const fileInput = document.getElementById("fileInput");
+
+        // Open file explorer when clicked
+        dropArea.addEventListener("click", () => fileInput.click());
+
+        // Handle file selection
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            handleFile(file);
+        });
+
+        // Drag & Drop functionality
+        dropArea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            dropArea.style.backgroundColor = "#e3e3e3";
+        });
+
+        dropArea.addEventListener("dragleave", () => {
+            dropArea.style.backgroundColor = "#f9f9f9";
+        });
+
+        dropArea.addEventListener("drop", (event) => {
+            event.preventDefault();
+            dropArea.style.backgroundColor = "#f9f9f9";
+            const file = event.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        // Callback function when a file is selected
+        function handleFile(file) {
+            console.log(file);
+            if (file) {
+                alert("File Selected: " + file.name);
+                var reader = new FileReader();
+
+                // Set the callback to be called when the file is read
+                reader.onload = function (e) {
+                    console.log(e);
+                    var data = e.target.result;
+                    console.log("parsing...");
+                    parse_content(data); //btoa(arr));
+                };
+
+                // Read the FIle
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+
+        var parse_content = function (content) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'build/pdf.worker.js';
+            pdfjsLib.cMapUrl = 'https://mozilla.github.io/pdf.js/web/cmaps/';
+            pdfjsLib.cMapPacked = true;
+
+            var loadingTask = pdfjsLib.getDocument(content);
+
+            loadingTask.promise.then(pdf_table_extractor).then(function (result) {
+                // JSON output
+                filter_table(result);
+                // console.log(JSON.stringify(result));
+            });;
+        };
+
+        var filter_table = function (data) {
+
+            let target_table_reached = false;
+            let classes_entries = {};
+
+            for (const table of data.pageTables[0].tables) {
+                console.log(table);
+
+                if (table[0] == "Hora") {
+                    target_table_reached = true;
+                    continue;
+                }
+
+                if (!target_table_reached) {
+                    continue;
+                }
+                let class_time = table[0].split("\n")[1];
+                let classes_in_time_slot = filter_schedule_time_slot(table);
+                console.log(classes_entries);
+                classes_entries[class_time] = classes_in_time_slot;
+            }
+
+            console.log(classes_entries);
+        }
+
+        var filter_schedule_time_slot = function (time_slot) {
+            // Skip the first one since it is the time specifier
+            classes_data = [];
+            for (let index = 1; index < time_slot.length; index++) {
+                const element = time_slot[index];
+                if (element == "-----") {
+                    continue;
+                }
+
+                let class_data = { 
+                    name: element.split("\n").pop(),   // Some times there are multiple \n, but most of the times the last part is the class name
+                    day_of_week_index: index-1              // basically which line this class is
+                }
+
+                classes_data.push(class_data);
+            }
+            return classes_data;
+        }
+
+    </script>
+
+</body>
+
+</html>
