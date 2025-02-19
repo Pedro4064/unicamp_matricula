@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario UNICAMP</title>
+    <link rel="icon" type="image/png" href="unicamp-logo-branco.png">
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,7 +56,7 @@
         }
 
         .upload-box img {
-            width: 40px;
+            width: 80px;
             opacity: 0.6;
             margin-bottom: 10px;
         }
@@ -62,17 +64,43 @@
         .upload-box input {
             display: none;
         }
+
+        .github-icon {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            /* Adjust size */
+            height: 40px;
+        }
+
+        .github-icon img {
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .github-icon img:hover {
+            transform: scale(1.1);
+            /* Small zoom effect on hover */
+        }
     </style>
 </head>
 
 <body>
 
+    <a href="https://github.com/Pedro4064" target="_blank" class="github-icon">
+        <img src="https://cdn-icons-png.flaticon.com/512/733/733609.png" alt="GitHub" />
+    </a>
+
+
     <div class="container">
-        <h2>Calendario UNICAMP</h2>
-        <p>PARSING - RELATORIO DE MATRÍCULA</p>
+        <h2>Calendário de Aulas - UNICAMP</h2>
+        <p>Conversor Local: Relatório de Matrícula ⇨ Calendar</p>
 
         <div for="fileInput" class="upload-box" id="dropArea">
-            <img src="https://cdn-icons-png.flaticon.com/512/833/833524.png" alt="Folder Icon">
+            <!-- <img src="https://cdn-icons-png.flaticon.com/512/833/833524.png" alt="Folder Icon"> -->
+            <img src="https://www.pngall.com/wp-content/uploads/2/Upload-PNG-Free-Image.png" alt="Folder Icon">
             <p>DRAG & DROP</p>
             <input type="file" id="fileInput" accept=".pdf" />
         </div>
@@ -217,15 +245,15 @@
                 let [hour, minute] = time_str.split(":").map(Number);
 
                 for (const university_class of classes) {
-                    cal.addEvent(university_class.name, 
-                                'Aula - UNICAMP',
-                                'Campinas, SP',
-                                 DAYS_OF_WEEK[university_class.day_of_week_index] + " " + `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
-                                 DAYS_OF_WEEK[university_class.day_of_week_index] + " " + `${String(hour+1).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
-                                {
-                                    freq:"WEEKLY",
-                                    until: END_OF_SEMESTER
-                                });
+                    cal.addEvent(university_class.name,
+                        'Aula - UNICAMP',
+                        'Campinas, SP',
+                        DAYS_OF_WEEK[university_class.day_of_week_index] + " " + `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                        DAYS_OF_WEEK[university_class.day_of_week_index] + " " + `${String(hour + 1).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                        {
+                            freq: "WEEKLY",
+                            until: END_OF_SEMESTER
+                        });
                 }
             }
 
